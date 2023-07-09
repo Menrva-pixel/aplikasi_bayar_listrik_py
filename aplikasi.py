@@ -1,7 +1,10 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-from database import connect
+from register import register
+
+import auth
+import register
 
 class Aplikasi(QMainWindow):
     def __init__(self):
@@ -40,24 +43,94 @@ class Aplikasi(QMainWindow):
         layout.addWidget(login_button)
         login_button.clicked.connect(self.login)
 
+        register_button = QPushButton("Register")
+        layout.addWidget(register_button)
+        register_button.clicked.connect(self.show_register)
+
         self.login_widget.setLayout(layout)
 
     def login(self):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        connection = connect()
+        auth.login(username, password)
 
-        try:
-            with connection.cursor() as cursor:
-                sql = "SELECT * FROM users WHERE username = %s AND password = %s"
-                cursor.execute(sql, (username, password))
-                result = cursor.fetchone()
+    def show_register(self):
+        self.register_widget = QWidget()
+        self.setCentralWidget(self.register_widget)
 
-                if result:
-                    print("Login successful")
-                else:
-                    print("Invalid username or password")
+        layout = QVBoxLayout()
 
-        finally:
-            connection.close()
+        label = QLabel("Registrasi Pengguna Baru")
+        label.setAlignment(Qt.AlignCenter)
+        label.setFont(QFont("Arial", 16))
+        layout.addWidget(label)
+
+        nama_label = QLabel("Nama:")
+        layout.addWidget(nama_label)
+
+        self.nama_input = QLineEdit()
+        layout.addWidget(self.nama_input)
+
+        alamat_label = QLabel("Alamat:")
+        layout.addWidget(alamat_label)
+
+        self.alamat_input = QLineEdit()
+        layout.addWidget(self.alamat_input)
+
+        email_label = QLabel("Email:")
+        layout.addWidget(email_label)
+
+        self.email_input = QLineEdit()
+        layout.addWidget(self.email_input)
+
+        telepon_label = QLabel("Telepon:")
+        layout.addWidget(telepon_label)
+
+        self.telepon_input = QLineEdit()
+        layout.addWidget(self.telepon_input)
+
+        register_button = QPushButton("Register")
+        layout.addWidget(register_button)
+        register_button.clicked.connect(self.register)
+
+        back_button = QPushButton("Kembali")
+        layout.addWidget(back_button)
+        back_button.clicked.connect(self.back_to_login)
+
+        self.register_widget.setLayout(layout)
+
+    def register(self):
+        nama = self.nama_input.text()
+        alamat = self.alamat_input.text()
+        email = self.email_input.text()
+        telepon = self.telepon_input.text()
+
+        password = self.password_input.text()  # Simpan nilai password sebelum menghapus widget
+
+        # Hapus widget dan persiapkan tampilan login
+        self.register_widget.deleteLater()
+        self.setCentralWidget(self.login_widget)
+
+        register.register(nama, alamat, email, telepon, password)
+        self.clear_input_fields()
+        self.init_login_ui()
+
+    def clear_input_fields(self):
+        self.username_input.clear()
+        self.password_input.clear()
+        self.nama_input.clear()
+        self.alamat_input.clear()
+        self.email_input.clear()
+        self.telepon_input.clear()
+
+    def back_to_login(self):
+        self.init_login_ui()
+
+if __name__ == "__main__":
+    import sys
+
+    app = QApplication(sys.argv)
+    window = Aplikasi()
+    window.show()
+    sys.exit(app.exec_())
